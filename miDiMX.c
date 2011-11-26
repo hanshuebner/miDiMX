@@ -45,7 +45,7 @@ void SetupHardware(void) {
   UCSR1C =  (1 << USBS1) | (1 << UCSZ11) | (1 << UCSZ10); // 8 data bits, 2 stop bits, no parity (8N2)
   UCSR1B =  0; // turn off for now.
 
-  DDRD |= (1 << PD3);
+  DDRD |= (1 << PD3);                                       /* PD3 is UART TX line, used as output */
 
   /* Hardware Initialization */
   LEDs_Init();
@@ -71,12 +71,12 @@ void sendDmxFrame(uint8_t* data, uint16_t len)
   PORTD |= (1 << PD3);
   _delay_us(12);
 
-  UCSR1B |= (1 << TXEN1);                                   /* switch on transmitter */
+  UCSR1B |= (1 << TXEN1);                                   /* switch transmitter on */
   sendByte(0);                                              /* send frame start code */
   for (int i = 0; i < len; i++) {
     sendByte(data[i]);
   }
-  UCSR1B &= ~(1 << TXEN1);                                  /* switch off transmitter */
+  UCSR1B &= ~(1 << TXEN1);                                  /* switch transmitter off */
 
   LEDs_SetAllLEDs(LEDS_NO_LEDS);
 }
