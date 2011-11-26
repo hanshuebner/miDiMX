@@ -106,11 +106,13 @@ int main(void) {
   for (;;) {
     MIDI_EventPacket_t ReceivedMIDIEvent;
     while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent)) {
-      switch (ReceivedMIDIEvent.Data1 & 0xf0) {
+      uint8_t command = ReceivedMIDIEvent.Data1 & 0xf0;
+      switch (command) {
       case MIDI_COMMAND_NOTE_ON:
+      case MIDI_COMMAND_NOTE_OFF:
         {
           uint8_t note = ReceivedMIDIEvent.Data2;
-          uint8_t velocity = ReceivedMIDIEvent.Data3;
+          uint8_t velocity = (command == MIDI_COMMAND_NOTE_ON) ? ReceivedMIDIEvent.Data3 : 0;
           data[note] = velocity << 1;
           if (note > channels) {
             channels = note;
