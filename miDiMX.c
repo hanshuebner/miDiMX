@@ -12,11 +12,6 @@
 #include <LUFA/Drivers/Board/LEDs.h>
 #include <LUFA/Drivers/USB/USB.h>
 
-/* Function Prototypes: */
-void SetupHardware(void);
-
-#define TXBITMASK 0x08
-
 /** LUFA MIDI Class driver interface configuration and state information. This structure is
  *  passed to all MIDI Class driver functions, so that multiple instances of the same class
  *  within a device can be differentiated from one another.
@@ -50,34 +45,39 @@ void SetupHardware(void) {
   UCSR1C =  (1 << USBS1) | (1 << UCSZ11) | (1 << UCSZ10); // 8 data bits, 2 stop bits, no parity (8N2)
   UCSR1B =  0; // turn off for now.
 
-  DDRD |= TXBITMASK;
+  DDRD |= (1 << PD3);
 
   /* Hardware Initialization */
   LEDs_Init();
   USB_Init();
 }
 
-#define WAIT_FOR_UART_TX_EMPTY while (!(UCSR1A & (1 << UDRE1)))
-#define WAIT_FOR_UART_TX_COMPLETE while (!(UCSR1A & (1 << TXC1)))
+static inline void
+sendByte(uint8_t c)
+{
+  while (!(UCSR1A & (1 << UDRE1)))
+    ;                                                       /* Wait for transmitter empty */
+  UDR1 = c;
+  while (!(UCSR1A & (1 << TXC1)))
+    ;                                                       /* Wait for transmission complete */
+}
 
 void sendDmxFrame(uint8_t* data, uint16_t len)
 {
   LEDs_SetAllLEDs(LEDS_LED1);
-  PORTD &= ~TXBITMASK;
-  _delay_us(88);
-  PORTD |= TXBITMASK;
-  _delay_us(8);
 
-  UCSR1B |= (1 << TXEN1);
-  WAIT_FOR_UART_TX_EMPTY;
-  UDR1 = 0;                                                 /* first byte is always zero for now */
-  WAIT_FOR_UART_TX_COMPLETE;
+  PORTD &= ~(1 << PD3);                                     /* transmit MAB to indicate start of frame */
+  _delay_us(92);                                            /* use liberal 92/12 usec frame start sequence */
+  PORTD |= (1 << PD3);
+  _delay_us(12);
+
+  UCSR1B |= (1 << TXEN1);                                   /* switch on transmitter */
+  sendByte(0);                                              /* send frame start code */
   for (int i = 0; i < len; i++) {
-    WAIT_FOR_UART_TX_EMPTY;
-    UDR1 = data[i];
-    WAIT_FOR_UART_TX_COMPLETE;
+    sendByte(data[i]);
   }
-  UCSR1B &= ~(1 << TXEN1);
+  UCSR1B &= ~(1 << TXEN1);                                  /* switch off transmitter */
+
   LEDs_SetAllLEDs(LEDS_NO_LEDS);
 }
 
@@ -101,7 +101,7 @@ int main(void) {
   sei();
 
   static uint8_t data[128];
-  static uint8_t channels = 0;
+  static uint8_t maxChannel = 0;
 
   for (;;) {
     MIDI_EventPacket_t ReceivedMIDIEvent;
@@ -111,13 +111,13 @@ int main(void) {
       case MIDI_COMMAND_NOTE_ON:
       case MIDI_COMMAND_NOTE_OFF:
         {
-          uint8_t note = ReceivedMIDIEvent.Data2;
-          uint8_t velocity = (command == MIDI_COMMAND_NOTE_ON) ? ReceivedMIDIEvent.Data3 : 0;
-          data[note] = velocity << 1;
-          if (note > channels) {
-            channels = note;
+          uint8_t channel = ReceivedMIDIEvent.Data2;
+          uint8_t brightness = (command == MIDI_COMMAND_NOTE_ON) ? (ReceivedMIDIEvent.Data3 << 2) : 0;
+          data[channel] = brightness;
+          if (channel > maxChannel) {
+            maxChannel = channel;
           }
-          sendDmxFrame(data, channels + 1);
+          sendDmxFrame(data, maxChannel + 1);
         }
       }
     }
