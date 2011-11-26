@@ -97,7 +97,7 @@ void sendDmxFrame(uint8_t* data, uint16_t len)
 
   UCSR1B |= (1 << TXEN1);                                   /* switch transmitter on */
   sendByte(0);                                              /* send frame start code */
-  for (int i = 0; i < len; i++) {
+  for (uint16_t i = 0; i < len; i++) {
     sendByte(data[i]);
   }
   UCSR1B &= ~(1 << TXEN1);                                  /* switch transmitter off */
