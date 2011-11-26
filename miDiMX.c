@@ -127,7 +127,7 @@ int main(void) {
       case MIDI_COMMAND_NOTE_OFF:
         {
           uint8_t channel = ReceivedMIDIEvent.Data2;
-          uint8_t brightness = (command == MIDI_COMMAND_NOTE_ON) ? (ReceivedMIDIEvent.Data3 << 2) : 0;
+          uint8_t brightness = (command == MIDI_COMMAND_NOTE_ON) ? (ReceivedMIDIEvent.Data3 << 1) : 0;
           data[channel] = brightness;
           if (channel > maxChannel) {
             maxChannel = channel;
