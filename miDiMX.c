@@ -30,6 +30,30 @@ USB_ClassInfo_MIDI_Device_t Keyboard_MIDI_Interface = {
   },
 };
 
+static inline void
+blinkLed(uint16_t onTime, uint16_t offTime)
+{
+  LEDs_SetAllLEDs(LEDS_LED1);
+  _delay_ms(onTime);
+  LEDs_SetAllLEDs(LEDS_NO_LEDS);
+  _delay_ms(offTime);
+}
+
+void
+error(uint8_t code)
+{
+  static const uint8_t blinkOnTime = 50;
+  static const uint8_t blinkOffTime = 200;
+  static const uint16_t errorCycleTime = 2000;
+
+  while (true) {
+    for (uint8_t i = 0; i < code; i++) {
+      blinkLed(blinkOnTime, blinkOffTime);
+    }
+    _delay_ms(errorCycleTime - (code * (blinkOnTime + blinkOffTime)));
+  }
+}
+
 void SetupHardware(void) {
   /* Disable watchdog if enabled by bootloader/fuses */
   MCUSR &= ~(1 << WDRF);
@@ -85,18 +109,9 @@ int main(void) {
 
   SetupHardware();
 
-  LEDs_SetAllLEDs(LEDS_LED1);
-  _delay_ms(100);
-  LEDs_SetAllLEDs(LEDS_NO_LEDS);
-  _delay_ms(100);
-  LEDs_SetAllLEDs(LEDS_LED1);
-  _delay_ms(100);
-  LEDs_SetAllLEDs(LEDS_NO_LEDS);
-  _delay_ms(100);
-  LEDs_SetAllLEDs(LEDS_LED1);
-  _delay_ms(100);
-  LEDs_SetAllLEDs(LEDS_NO_LEDS);
-  _delay_ms(100);
+  blinkLed(100, 100);
+  blinkLed(100, 100);
+  blinkLed(100, 100);
 
   sei();
 
@@ -123,24 +138,6 @@ int main(void) {
     }
     MIDI_Device_USBTask(&Keyboard_MIDI_Interface);
     USB_USBTask();
-  }
-}
-
-void
-error(uint8_t code)
-{
-  static const uint8_t blinkOnTime = 50;
-  static const uint8_t blinkOffTime = 200;
-  static const uint16_t errorCycleTime = 2000;
-
-  while (true) {
-    for (uint8_t i = 0; i < code; i++) {
-      LEDs_SetAllLEDs(LEDS_LED1);
-      _delay_ms(blinkOnTime);
-      LEDs_SetAllLEDs(LEDS_NO_LEDS);
-      _delay_ms(blinkOffTime);
-    }
-    _delay_ms(errorCycleTime - (code * (blinkOnTime + blinkOffTime)));
   }
 }
 
