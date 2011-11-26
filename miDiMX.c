@@ -118,7 +118,7 @@ int main(void) {
   static uint8_t data[128];
   static uint8_t maxChannel = 0;
 
-  for (;;) {
+  while (true) {
     MIDI_EventPacket_t ReceivedMIDIEvent;
     while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent)) {
       uint8_t command = ReceivedMIDIEvent.Data1 & 0xf0;
