@@ -1,6 +1,7 @@
-# miDiMX - LUFA based MIDI to DMX controller #
+# miDiMX - LUFA based USB MIDI to DMX controller #
 
-This program implements a [MIDI](http://en.wikipedia.org/wiki/MIDI) to
+This program implements an USB
+[MIDI](http://en.wikipedia.org/wiki/MIDI) to
 [DMX](http://en.wikipedia.org/wiki/DMX512) interface using the
 [LUFA](http://www.fourwalledcubicle.com/LUFA.php) library.  I am using
 it with the awesome [Teensy](http://www.pjrc.com/teensy/) hardware.
