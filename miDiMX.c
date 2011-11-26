@@ -64,10 +64,10 @@ void SetupHardware(void) {
 
   /* Initialize UART */
   UBRR1L = F_CPU/4000000 - 1; // 250kbps
-  UBRR1H =  0;
-  UCSR1A =  0; // clear error flags
-  UCSR1C =  (1 << USBS1) | (1 << UCSZ11) | (1 << UCSZ10); // 8 data bits, 2 stop bits, no parity (8N2)
-  UCSR1B =  0; // turn off for now.
+  UBRR1H = 0;
+  UCSR1A = 0; // clear error flags
+  UCSR1C = (1 << USBS1) | (1 << UCSZ11) | (1 << UCSZ10); // 8 data bits, 2 stop bits, no parity (8N2)
+  UCSR1B = 0; // turn off for now.
 
   DDRD |= (1 << PD3);                                       /* PD3 is UART TX line, used as output */
 
