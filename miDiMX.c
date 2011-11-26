@@ -126,11 +126,29 @@ int main(void) {
   }
 }
 
+void
+error(uint8_t code)
+{
+  static const uint8_t blinkOnTime = 50;
+  static const uint8_t blinkOffTime = 200;
+  static const uint16_t errorCycleTime = 2000;
+
+  while (true) {
+    for (uint8_t i = 0; i < code; i++) {
+      LEDs_SetAllLEDs(LEDS_LED1);
+      _delay_ms(blinkOnTime);
+      LEDs_SetAllLEDs(LEDS_NO_LEDS);
+      _delay_ms(blinkOffTime);
+    }
+    _delay_ms(errorCycleTime - (code * (blinkOnTime + blinkOffTime)));
+  }
+}
+
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
-  bool ConfigSuccess = true;
-
-  ConfigSuccess &= MIDI_Device_ConfigureEndpoints(&Keyboard_MIDI_Interface);
+  if (!MIDI_Device_ConfigureEndpoints(&Keyboard_MIDI_Interface)) {
+    error(1);
+  }
 }
 
