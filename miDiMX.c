@@ -16,7 +16,7 @@
  *  passed to all MIDI Class driver functions, so that multiple instances of the same class
  *  within a device can be differentiated from one another.
  */
-USB_ClassInfo_MIDI_Device_t Keyboard_MIDI_Interface = {
+USB_ClassInfo_MIDI_Device_t keyboardMidiInterface = {
   .Config = {
     .StreamingInterfaceNumber = 1,
 
@@ -54,7 +54,7 @@ error(uint8_t code)
   }
 }
 
-void SetupHardware(void) {
+void setupHardware(void) {
   /* Disable watchdog if enabled by bootloader/fuses */
   MCUSR &= ~(1 << WDRF);
   wdt_disable();
@@ -107,7 +107,7 @@ void sendDmxFrame(uint8_t* data, uint16_t len)
 
 int main(void) {
 
-  SetupHardware();
+  setupHardware();
 
   blinkLed(100, 100);
   blinkLed(100, 100);
@@ -119,15 +119,15 @@ int main(void) {
   static uint8_t maxChannel = 0;
 
   while (true) {
-    MIDI_EventPacket_t ReceivedMIDIEvent;
-    while (MIDI_Device_ReceiveEventPacket(&Keyboard_MIDI_Interface, &ReceivedMIDIEvent)) {
-      uint8_t command = ReceivedMIDIEvent.Data1 & 0xf0;
+    MIDI_EventPacket_t event;
+    while (MIDI_Device_ReceiveEventPacket(&keyboardMidiInterface, &event)) {
+      uint8_t command = event.Data1 & 0xf0;
       switch (command) {
       case MIDI_COMMAND_NOTE_ON:
       case MIDI_COMMAND_NOTE_OFF:
         {
-          uint8_t channel = ReceivedMIDIEvent.Data2;
-          uint8_t brightness = (command == MIDI_COMMAND_NOTE_ON) ? (ReceivedMIDIEvent.Data3 << 1) : 0;
+          uint8_t channel = event.Data2;
+          uint8_t brightness = (command == MIDI_COMMAND_NOTE_ON) ? (event.Data3 << 1) : 0;
           data[channel] = brightness;
           if (channel > maxChannel) {
             maxChannel = channel;
@@ -136,7 +136,7 @@ int main(void) {
         }
       }
     }
-    MIDI_Device_USBTask(&Keyboard_MIDI_Interface);
+    MIDI_Device_USBTask(&keyboardMidiInterface);
     USB_USBTask();
   }
 }
@@ -144,7 +144,7 @@ int main(void) {
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
-  if (!MIDI_Device_ConfigureEndpoints(&Keyboard_MIDI_Interface)) {
+  if (!MIDI_Device_ConfigureEndpoints(&keyboardMidiInterface)) {
     error(1);
   }
 }
